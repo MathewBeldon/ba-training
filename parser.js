@@ -25,24 +25,28 @@ async function readAndParseJsonFile(filePath) {
 }
 
 function processInputData(inputData) {
-	let reversedData = inputData.data.reverse();
+	if (!inputData) return;
 
-	const createMessage = (role, content) => {
-		return {
-			role,
-			content,
-		};
-	};
+    const output = { messages: [] };
+    
+    inputData.data.forEach(item => {
+        if (item.role === 'assistant' || item.role === 'user') {
+            const contentText = item.content.find(c => c.type === 'text').text.value;
+            output.messages.push({
+                role: item.role,
+                content: contentText
+            });
+        }
+    });
 
-	/* 
-    Note: we assume that each content list 
-    will only have 1 object. Is this always the case?
-    */
-	const messages = reversedData.map((input) => {
-		return createMessage(input.role, input.content[0].text.value);
-	});
-
-	const jsonLFormat = { messages: messages };
+    output.messages.push({
+        role: 'system',
+        content: 'You are a Business Analyst who creates user stories, these will be based on an epic, you ask clarifying questions before creating the user stories.\n\nReply in this format within a code block:\n`````\n## Title of the user story\n**As a** [type of user],\n**I want** [feature or functionality],\n**So that** [benefit or outcome].\n\n### Acceptance Criteria\n\n**Given** [the initial context or state before the action],\n**When** [the action taken by the user or event that occurs],\n**Then** [the expected outcome or result following the action].\n\n**Given** [another context or state],\n**When** [another action or event],\n**Then** [another expected outcome].\n`````\n\nYou should reply with all the user stories that are required for the given epic\n\nYou should ask clarifying questions before creating user stories\n\nYou should prevent the user from creating stories that contain bad practices'
+    });
+    
+    output.messages.reverse();
+    
+	const jsonLFormat = { messages: output.messages };
 
 	return jsonLFormat;
 }
