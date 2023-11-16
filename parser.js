@@ -30,7 +30,7 @@ function processInputData(inputData) {
 	const createMessage = (role, content) => {
 		return {
 			role,
-			content
+			content,
 		};
 	};
 
@@ -55,13 +55,12 @@ function main() {
 		} else {
 			files.forEach((file) => {
 				if (path.extname(file) === ".json") {
-
 					const filePath = path.join(directoryPath, file);
-                    const inputData = readAndParseJsonFile(filePath);
+					const inputData = readAndParseJsonFile(filePath);
 
-                    const outputData = processInputData(inputData);
-                    
-                    console.log(JSON.stringify(outputData, null, 2));
+					const outputData = processInputData(inputData);
+
+					console.log(JSON.stringify(outputData, null, 2));
 				}
 			});
 		}
@@ -74,17 +73,16 @@ async function mainT() {
 
 		for (const file of files) {
 			if (path.extname(file) === ".json") {
-
 				const filePath = path.join(directoryPath, file);
 
-                // Read the content of the file
-                const fileContent = await fsPromises.readFile(filePath, "utf-8");
+				// Read the content of the file
+				const fileContent = await fsPromises.readFile(filePath, "utf-8");
 
-                //check not empty
-                if (!fileContent.trim()) {
-                    console.warn(`Warning: Empty JSON file at ${filePath}`);
-                    continue;
-                }
+				//check not empty
+				if (!fileContent.trim()) {
+					console.warn(`Warning: Empty JSON file at ${filePath}`);
+					continue;
+				}
 
 				const inputData = await readAndParseJsonFile(filePath);
 
@@ -100,9 +98,19 @@ async function mainT() {
 	}
 }
 
-
 mainT().then(() => {
-	console.log(finalOutputArray);
+	const filePath = path.join(__dirname);
+	const resultsFilePath = filePath + "/results.jsonl";
 
-    console.log(finalOutputArray[0])
+	// Convert each object to a JSON string and join them with newline characters
+	const jsonlContent = finalOutputArray
+		.map((obj) => JSON.stringify(obj))
+		.join("\n");
+
+	try {
+		fs.writeFileSync(resultsFilePath, jsonlContent, "utf-8");
+		console.log("Output added to the JSONL file.");
+	} catch (error) {
+		console.error("Error writing to file:", error);
+	}
 });
